@@ -20,4 +20,5 @@ features = [
   'HtmlCanvasElement',
   'Window',
   'MouseScrollEvent',
+  'CssStyleDeclaration',
 ]

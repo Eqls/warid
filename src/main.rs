@@ -33,14 +33,14 @@ macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
 
-fn draw(ctx: &web_sys::CanvasRenderingContext2d, start_x: i32, start_y: i32) {
-    ctx.clear_rect(0.0, 0.0, 500.0, 500.0);
+fn draw(ctx: &web_sys::CanvasRenderingContext2d, start_x: i32, start_y: i32, data: &Vec<i32>) {
+    ctx.clear_rect(0.0, 0.0, CANVAS_WIDTH as f64, CANVAS_HEIGHT as f64);
     ctx.begin_path();
     let limit = CANVAS_HEIGHT / ROW_HEIGHT as i32;
     let mut count = 0;
     console_log!("draw: start");
-    for index in 0..1000 {
-        draw_row(&ctx, count, index, start_y);
+    for index in data {
+        draw_row(&ctx, count, &index, start_y);
         count += 1;
     }
 
@@ -48,7 +48,7 @@ fn draw(ctx: &web_sys::CanvasRenderingContext2d, start_x: i32, start_y: i32) {
     console_log!("draw: end");
 }
 
-fn draw_row(ctx: &web_sys::CanvasRenderingContext2d, i: i32, item_index: usize, top_scroll: i32) {
+fn draw_row(ctx: &web_sys::CanvasRenderingContext2d, i: i32, item_index: &i32, top_scroll: i32) {
     let height = i * ROW_HEIGHT as i32;
     let offset = height - top_scroll;
     let ypos = height as f64 - top_scroll as f64;
@@ -73,11 +73,27 @@ fn draw_row(ctx: &web_sys::CanvasRenderingContext2d, i: i32, item_index: usize, 
     .unwrap();
 }
 
-fn scroll_handler(document: &web_sys::Document, ctx: web_sys::CanvasRenderingContext2d) {
+fn scroll_handler(
+    document: &web_sys::Document,
+    ctx: web_sys::CanvasRenderingContext2d,
+    data: Vec<i32>,
+) {
     let scroller = document.get_element_by_id("scroller").unwrap();
+    let innter = document
+        .get_element_by_id("scroller-innter")
+        .unwrap()
+        .dyn_into::<web_sys::HtmlElement>()
+        .unwrap();
+    innter
+        .style()
+        .set_property(
+            "height",
+            (((data.len() * ROW_HEIGHT as usize) as usize).to_string() + "px").as_str(),
+        )
+        .unwrap();
     let scroller_clone = scroller.clone();
     let handle_scroll = Closure::wrap(Box::new(move |event: web_sys::MouseScrollEvent| {
-        draw(&ctx, event.client_x(), scroller_clone.scroll_top());
+        draw(&ctx, event.client_x(), scroller_clone.scroll_top(), &data);
     }) as Box<dyn FnMut(_)>);
 
     scroller
@@ -90,11 +106,23 @@ fn scroll_handler(document: &web_sys::Document, ctx: web_sys::CanvasRenderingCon
 // #[wasm_bindgen(start)]
 pub fn main() {
     let document = web_sys::window().unwrap().document().unwrap();
+    let ratio = web_sys::window().unwrap().device_pixel_ratio();
     let canvas = document.get_element_by_id("canvas").unwrap();
     let canvas: web_sys::HtmlCanvasElement = canvas
         .dyn_into::<web_sys::HtmlCanvasElement>()
         .map_err(|_| ())
         .unwrap();
+    // HDPi fix attempt
+    // canvas.set_width((CANVAS_WIDTH as f64 * ratio) as u32);
+    // canvas.set_height((CANVAS_HEIGHT as f64 * ratio) as u32);
+    // canvas
+    //     .style()
+    //     .set_property("width", (CANVAS_WIDTH.to_string() + "px").as_str())
+    //     .unwrap();
+    // canvas
+    //     .style()
+    //     .set_property("height", (CANVAS_HEIGHT.to_string() + "px").as_str())
+    //     .unwrap();
 
     let ctx = canvas
         .get_context("2d")
@@ -102,7 +130,8 @@ pub fn main() {
         .unwrap()
         .dyn_into::<web_sys::CanvasRenderingContext2d>()
         .unwrap();
+    let data: Vec<i32> = (0..500000).collect();
 
-    scroll_handler(&document, ctx.clone());
-    draw(&ctx, 1, 1);
+    scroll_handler(&document, ctx.clone(), data.clone());
+    draw(&ctx, 1, 1, &data);
 }
