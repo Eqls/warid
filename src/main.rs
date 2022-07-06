@@ -6,6 +6,8 @@ use wasm_bindgen::JsCast;
 use web_sys;
 
 const ROW_HEIGHT: f64 = 30.0;
+const CANVAS_HEIGHT: i32 = 500;
+const CANVAS_WIDTH: i32 = 500;
 
 #[wasm_bindgen]
 extern "C" {
@@ -34,31 +36,39 @@ macro_rules! console_log {
 fn draw(ctx: &web_sys::CanvasRenderingContext2d, start_x: i32, start_y: i32) {
     ctx.clear_rect(0.0, 0.0, 500.0, 500.0);
     ctx.begin_path();
-    let limit = 500/ROW_HEIGHT as i32;
+    let limit = CANVAS_HEIGHT / ROW_HEIGHT as i32;
     let mut count = 0;
+    console_log!("draw: start");
     for index in 0..1000 {
-        if count > limit {
-            break;
-        }
-        let height = (index as i32 + 1) * ROW_HEIGHT as i32;
-        if start_y <= height || start_y == 1  {
-            draw_row(&ctx, &count, index, start_y);
-            count += 1;
-        }
+        draw_row(&ctx, count, index, start_y);
+        count += 1;
     }
 
     ctx.stroke();
+    console_log!("draw: end");
 }
 
-fn draw_row(ctx: &web_sys::CanvasRenderingContext2d, i: &i32, item_index: usize, top_scroll: i32) {
-    let height = i.to_owned() * ROW_HEIGHT as i32;
-    let offset = top_scroll - height;
-    console_log!("{:?}", &offset);
-    ctx.stroke_rect(10.0, height as f64 - offset as f64, 100.0, ROW_HEIGHT);
+fn draw_row(ctx: &web_sys::CanvasRenderingContext2d, i: i32, item_index: usize, top_scroll: i32) {
+    let height = i * ROW_HEIGHT as i32;
+    let offset = height - top_scroll;
+    let ypos = height as f64 - top_scroll as f64;
+
+    if ypos < -ROW_HEIGHT || ypos > CANVAS_HEIGHT as f64 + ROW_HEIGHT {
+        return;
+    }
+
+    console_log!(
+        "offset: {:?}; height: {:?}; top_scroll: {:?}; ypos: {:?}",
+        &offset,
+        &height,
+        &top_scroll,
+        &ypos
+    );
+    ctx.stroke_rect(10.0, ypos, 100.0, ROW_HEIGHT);
     ctx.fill_text(
         String::as_str(&item_index.to_string()),
-        40.0,
-        height as f64 - offset as f64 + ROW_HEIGHT/2.0,
+        50.0,
+        ypos + ROW_HEIGHT / 2.0,
     )
     .unwrap();
 }
@@ -71,7 +81,7 @@ fn scroll_handler(document: &web_sys::Document, ctx: web_sys::CanvasRenderingCon
     }) as Box<dyn FnMut(_)>);
 
     scroller
-        .add_event_listener_with_callback("wheel", handle_scroll.as_ref().unchecked_ref())
+        .add_event_listener_with_callback("scroll", handle_scroll.as_ref().unchecked_ref())
         .unwrap();
 
     handle_scroll.forget();
