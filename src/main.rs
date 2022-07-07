@@ -36,29 +36,30 @@ macro_rules! console_log {
 fn draw(ctx: &web_sys::CanvasRenderingContext2d, start_x: i32, start_y: i32, data: &Vec<i32>) {
     ctx.clear_rect(0.0, 0.0, CANVAS_WIDTH as f64, CANVAS_HEIGHT as f64);
     ctx.begin_path();
-    let limit = CANVAS_HEIGHT / ROW_HEIGHT as i32;
-    let mut count = 0;
+    let start_index = (start_y as f64 / ROW_HEIGHT).floor() as i32;
+    let end_index = (start_y as f64 / ROW_HEIGHT + CANVAS_HEIGHT as f64 / ROW_HEIGHT).ceil() as i32;
     console_log!("draw: start");
-    for index in data {
-        draw_row(&ctx, count, &index, start_y);
-        count += 1;
+    console_log!("start i: {:?}; end i: {:?}", start_index, end_index);
+    for index in start_index..end_index {
+        draw_row(&ctx, index, start_y);
     }
 
     ctx.stroke();
     console_log!("draw: end");
 }
 
-fn draw_row(ctx: &web_sys::CanvasRenderingContext2d, i: i32, item_index: &i32, top_scroll: i32) {
-    let height = i * ROW_HEIGHT as i32;
+fn draw_row(ctx: &web_sys::CanvasRenderingContext2d, index: i32, top_scroll: i32) {
+    let height = index * ROW_HEIGHT as i32;
     let offset = height - top_scroll;
     let ypos = height as f64 - top_scroll as f64;
 
-    if ypos < -ROW_HEIGHT || ypos > CANVAS_HEIGHT as f64 + ROW_HEIGHT {
-        return;
-    }
+    // if ypos < -ROW_HEIGHT || ypos > CANVAS_HEIGHT as f64 + ROW_HEIGHT {
+    //     return;
+    // }
 
     console_log!(
-        "offset: {:?}; height: {:?}; top_scroll: {:?}; ypos: {:?}",
+        "index: {:?}; offset: {:?}; height: {:?}; top_scroll: {:?}; ypos: {:?}",
+        index,
         &offset,
         &height,
         &top_scroll,
@@ -66,7 +67,7 @@ fn draw_row(ctx: &web_sys::CanvasRenderingContext2d, i: i32, item_index: &i32, t
     );
     ctx.stroke_rect(10.0, ypos, 100.0, ROW_HEIGHT);
     ctx.fill_text(
-        String::as_str(&item_index.to_string()),
+        String::as_str(&index.to_string()),
         50.0,
         ypos + ROW_HEIGHT / 2.0,
     )
