@@ -80,8 +80,9 @@ fn scroll_handler(
     data: Vec<i32>,
 ) {
     let scroller = document.get_element_by_id("scroller").unwrap();
+    let scroller_inner = document.get_element_by_id("scroller-inner").unwrap();
     let innter = document
-        .get_element_by_id("scroller-innter")
+        .get_element_by_id("scroller-inner")
         .unwrap()
         .dyn_into::<web_sys::HtmlElement>()
         .unwrap();
@@ -92,6 +93,26 @@ fn scroll_handler(
             (((data.len() * ROW_HEIGHT as usize) as usize).to_string() + "px").as_str(),
         )
         .unwrap();
+    let inner_block_count = ((data.len() * ROW_HEIGHT as usize) as usize) / 100000;
+    let item = document
+        .get_element_by_id("scroller-item")
+        .unwrap()
+        .dyn_into::<web_sys::HtmlElement>()
+        .unwrap();
+        item
+        .style()
+        .set_property(
+            "height",
+            "100000px",
+        )
+        .unwrap();
+
+        if inner_block_count > 1 {
+            for i in 1..inner_block_count {
+                let t = item.clone_node().unwrap();
+                scroller_inner.append_child(&t).unwrap();
+            }
+        }
     let scroller_clone = scroller.clone();
     let handle_scroll = Closure::wrap(Box::new(move |event: web_sys::MouseScrollEvent| {
         draw(&ctx, event.client_x(), scroller_clone.scroll_top(), &data);

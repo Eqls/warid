@@ -13,8 +13,10 @@
     <canvas id="canvas" width="500" height="500"
       style="contain: strict; display: block; cursor: default; width: 500px; height: 500px;"></canvas>
     <div id="scroller"
-      style="top: 0; position: absolute; height: 500px; width: 500px; overflow: auto; transform:translate3d(0px, 0px, 0px)">
-      <div id="scroller-innter" style="width: 500px"></div>
+      style="top: 0; position: absolute; height: 500px; width: 500px; overflow: auto; transform:translate3d(0px, 0px, 0px);">
+      <div id="scroller-inner" style="height: 100%; width: 500px; display: flex; flex-direction: column;">
+        <div id="scroller-item" style="width: 500px"></div>
+      </div>
     </div>
   </div>
 </body>
