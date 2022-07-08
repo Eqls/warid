@@ -38,8 +38,7 @@ fn draw(ctx: &web_sys::CanvasRenderingContext2d, start_x: i32, start_y: i32, dat
     ctx.begin_path();
     let start_index = (start_y as f64 / ROW_HEIGHT).floor() as i32;
     let end_index = (start_y as f64 / ROW_HEIGHT + CANVAS_HEIGHT as f64 / ROW_HEIGHT).ceil() as i32;
-    console_log!("draw: start");
-    console_log!("start i: {:?}; end i: {:?}", start_index, end_index);
+
     for index in start_index..end_index {
         draw_row(&ctx, index, start_y);
     }
@@ -53,18 +52,6 @@ fn draw_row(ctx: &web_sys::CanvasRenderingContext2d, index: i32, top_scroll: i32
     let offset = height - top_scroll;
     let ypos = height as f64 - top_scroll as f64;
 
-    // if ypos < -ROW_HEIGHT || ypos > CANVAS_HEIGHT as f64 + ROW_HEIGHT {
-    //     return;
-    // }
-
-    console_log!(
-        "index: {:?}; offset: {:?}; height: {:?}; top_scroll: {:?}; ypos: {:?}",
-        index,
-        &offset,
-        &height,
-        &top_scroll,
-        &ypos
-    );
     ctx.stroke_rect(10.0, ypos, 100.0, ROW_HEIGHT);
     ctx.fill_text(
         String::as_str(&index.to_string()),
@@ -134,7 +121,7 @@ pub fn main() {
         .dyn_into::<web_sys::HtmlCanvasElement>()
         .map_err(|_| ())
         .unwrap();
-    // HDPi fix attempt
+    // TODO: HDPi fix attempt
     // canvas.set_width((CANVAS_WIDTH as f64 * ratio) as u32);
     // canvas.set_height((CANVAS_HEIGHT as f64 * ratio) as u32);
     // canvas
